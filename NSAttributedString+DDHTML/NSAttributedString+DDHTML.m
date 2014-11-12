@@ -33,7 +33,7 @@
 
 @implementation NSAttributedString (DDHTML)
 
-+ (NSAttributedString *)attributedStringFromHTML:(NSString *)htmlString boldFont:(UIFont *)boldFont defaultFont:(UIFont *)defaultFont defaultSize:(CGFloat)defaultSize {
++ (NSAttributedString *)attributedStringFromHTML:(NSString *)htmlString boldFont:(UIFont *)boldFont italicFont:(UIFont *)italicFont defaultFont:(UIFont *)defaultFont defaultSize:(CGFloat)defaultSize {
     // Parse HTML string as XML document using UTF-8 encoding
     const char *encoding =[@"UTF-8" UTF8String];
     NSData* documentData = [htmlString dataUsingEncoding:NSUTF8StringEncoding];
@@ -46,7 +46,7 @@
 
     xmlNodePtr currentNode = document->children;
     while (currentNode != NULL) {
-        NSAttributedString *childString = [self attributedStringFromNode:currentNode defaultFont:defaultFont boldFont:boldFont defaultSize:defaultSize];
+        NSAttributedString *childString = [self attributedStringFromNode:currentNode defaultFont:defaultFont boldFont:boldFont italicFont:italicFont defaultSize:defaultSize];
         [finalAttributedString appendAttributedString:childString];
 
         currentNode = currentNode->next;
@@ -57,7 +57,7 @@
     return finalAttributedString;
 }
 
-+ (NSAttributedString *)attributedStringFromNode:(xmlNodePtr)xmlNode defaultFont:(UIFont *)defaultFont boldFont:(UIFont *)boldFont defaultSize:(CGFloat)defaultSize {
++ (NSAttributedString *)attributedStringFromNode:(xmlNodePtr)xmlNode defaultFont:(UIFont *)defaultFont boldFont:(UIFont *)boldFont italicFont:(UIFont *)italicFont defaultSize:(CGFloat)defaultSize {
     NSMutableAttributedString *nodeAttributedString = [[NSMutableAttributedString alloc] init];
 
     if ((xmlNode->type != XML_ENTITY_REF_NODE) && ((xmlNode->type != XML_ELEMENT_NODE) && xmlNode->content != NULL)) {
@@ -68,7 +68,7 @@
     // Handle children
     xmlNodePtr currentNode = xmlNode->children;
     while (currentNode != NULL) {
-        NSAttributedString *childString = [self attributedStringFromNode:currentNode defaultFont:defaultFont boldFont:boldFont defaultSize:defaultSize];
+        NSAttributedString *childString = [self attributedStringFromNode:currentNode defaultFont:defaultFont boldFont:boldFont italicFont:italicFont defaultSize:defaultSize];
         [nodeAttributedString appendAttributedString:childString];
 
         currentNode = currentNode->next;
