@@ -38,94 +38,94 @@
     // Parse HTML string as XML document using UTF-8 encoding
     const char *encoding =[@"UTF-8" UTF8String];
     NSData* documentData = [htmlString dataUsingEncoding:NSUTF8StringEncoding];
-    xmlDoc *document = htmlReadMemory([documentData bytes], [documentData length], nil, encoding, HTML_PARSE_NOWARNING | HTML_PARSE_NOERROR);    
-    
+    xmlDoc *document = htmlReadMemory([documentData bytes], [documentData length], nil, encoding, HTML_PARSE_NOWARNING | HTML_PARSE_NOERROR);
+
     if (document == NULL)
         return nil;
-    
+
     NSMutableAttributedString *finalAttributedString = [[NSMutableAttributedString alloc] init];
-    
+
     xmlNodePtr currentNode = document->children;
     while (currentNode != NULL) {
         NSAttributedString *childString = [self attributedStringFromNode:currentNode boldFont:boldFont italicFont:italicFont];
         [finalAttributedString appendAttributedString:childString];
-        
+
         currentNode = currentNode->next;
     }
-    
+
     xmlFreeDoc(document);
-    
+
     return finalAttributedString;
 }
 
 + (NSAttributedString *)attributedStringFromNode:(xmlNodePtr)xmlNode boldFont:(UIFont *)boldFont italicFont:(UIFont *)italicFont
 {
     NSMutableAttributedString *nodeAttributedString = [[NSMutableAttributedString alloc] init];
-    
+
     if ((xmlNode->type != XML_ENTITY_REF_NODE) && ((xmlNode->type != XML_ELEMENT_NODE) && xmlNode->content != NULL)) {
         [nodeAttributedString appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithCString:(const char *)xmlNode->content encoding:NSUTF8StringEncoding]]];
     }
-    
+
     // Handle children
     xmlNodePtr currentNode = xmlNode->children;
     while (currentNode != NULL) {
         NSAttributedString *childString = [self attributedStringFromNode:currentNode boldFont:boldFont italicFont:italicFont];
         [nodeAttributedString appendAttributedString:childString];
-        
+
         currentNode = currentNode->next;
     }
-    
+
     if (xmlNode->type == XML_ELEMENT_NODE) {
-        
+
         NSRange nodeAttributedStringRange = NSMakeRange(0, nodeAttributedString.length);
-        
+
         // Build dictionary to store attributes
         NSMutableDictionary *attributeDictionary = [NSMutableDictionary dictionary];
         if (xmlNode->properties != NULL) {
             xmlAttrPtr attribute = xmlNode->properties;
-            
+
             while (attribute != NULL) {
                 NSString *attributeValue = @"";
-                
+
                 if (attribute->children != NULL) {
                     attributeValue = [NSString stringWithCString:(const char *)attribute->children->content encoding:NSUTF8StringEncoding];
                 }
                 NSString *attributeName = [[NSString stringWithCString:(const char*)attribute->name encoding:NSUTF8StringEncoding] lowercaseString];
                 [attributeDictionary setObject:attributeValue forKey:attributeName];
-                
+
                 attribute = attribute->next;
             }
         }
-        
+
         // Bold Tag
         if (strncmp("b", (const char *)xmlNode->name, strlen((const char *)xmlNode->name)) == 0) {
             if (boldFont) {
                 [nodeAttributedString addAttribute:NSFontAttributeName value:boldFont range:nodeAttributedStringRange];
             }
         }
-        
-        // Italic Tag
+
+            // Italic Tag
         else if (strncmp("i", (const char *)xmlNode->name, strlen((const char *)xmlNode->name)) == 0) {
             if (italicFont) {
                 [nodeAttributedString addAttribute:NSFontAttributeName value:italicFont range:nodeAttributedStringRange];
             }
         }
-        
-        // Underline Tag
+
+            // Underline Tag
         else if (strncmp("u", (const char *)xmlNode->name, strlen((const char *)xmlNode->name)) == 0) {
             [nodeAttributedString addAttribute:NSUnderlineStyleAttributeName value:@(NSUnderlineStyleSingle) range:nodeAttributedStringRange];
         }
-        
-        // Stike Tag
+
+            // Stike Tag
         else if (strncmp("strike", (const char *)xmlNode->name, strlen((const char *)xmlNode->name)) == 0) {
             [nodeAttributedString addAttribute:NSStrikethroughStyleAttributeName value:@(YES) range:nodeAttributedStringRange];
         }
-        
-        // Stoke Tag
+
+            // Stoke Tag
         else if (strncmp("stroke", (const char *)xmlNode->name, strlen((const char *)xmlNode->name)) == 0) {
             UIColor *strokeColor = [UIColor purpleColor];
             NSNumber *strokeWidth = @(1.0);
-            
+
             if ([attributeDictionary objectForKey:@"color"]) {
                 strokeColor = [self colorFromHexString:[attributeDictionary objectForKey:@"color"]];
             }
@@ -135,18 +135,18 @@
             if (![attributeDictionary objectForKey:@"nofill"]) {
                 strokeWidth = @(-fabs([strokeWidth doubleValue]));
             }
-            
+
             [nodeAttributedString addAttribute:NSStrokeColorAttributeName value:strokeColor range:nodeAttributedStringRange];
             [nodeAttributedString addAttribute:NSStrokeWidthAttributeName value:strokeWidth range:nodeAttributedStringRange];
         }
-        
-        // Shadow Tag
+
+            // Shadow Tag
         else if (strncmp("shadow", (const char *)xmlNode->name, strlen((const char *)xmlNode->name)) == 0) {
             NSShadow *shadow = [[NSShadow alloc] init];
             shadow.shadowOffset = CGSizeMake(0, 0);
             shadow.shadowBlurRadius = 2.0;
             shadow.shadowColor = [UIColor blackColor];
-            
+
             if ([attributeDictionary objectForKey:@"offset"]) {
                 shadow.shadowOffset = CGSizeFromString([attributeDictionary objectForKey:@"offset"]);
             }
@@ -156,17 +156,17 @@
             if ([attributeDictionary objectForKey:@"color"]) {
                 shadow.shadowColor = [self colorFromHexString:[attributeDictionary objectForKey:@"color"]];
             }
-            
+
             [nodeAttributedString addAttribute:NSShadowAttributeName value:shadow range:nodeAttributedStringRange];
         }
-        
-        // Font Tag
+
+            // Font Tag
         else if (strncmp("font", (const char *)xmlNode->name, strlen((const char *)xmlNode->name)) == 0) {
             NSString *fontName = nil;
             NSNumber *fontSize = nil;
             UIColor *foregroundColor = nil;
             UIColor *backgroundColor = nil;
-            
+
             if ([attributeDictionary objectForKey:@"face"]) {
                 fontName = [attributeDictionary objectForKey:@"face"];
             }
@@ -179,7 +179,7 @@
             if ([attributeDictionary objectForKey:@"backgroundcolor"]) {
                 backgroundColor = [self colorFromHexString:[attributeDictionary objectForKey:@"backgroundcolor"]];
             }
-    
+
             if (fontName == nil && fontSize != nil) {
                 [nodeAttributedString addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:[fontSize doubleValue]] range:nodeAttributedStringRange];
             }
@@ -189,7 +189,7 @@
             else if (fontName != nil && fontSize != nil) {
                 [nodeAttributedString addAttribute:NSFontAttributeName value:[self fontOrSystemFontForName:fontName size:fontSize.floatValue] range:nodeAttributedStringRange];
             }
-    
+
             if (foregroundColor) {
                 [nodeAttributedString addAttribute:NSForegroundColorAttributeName value:foregroundColor range:nodeAttributedStringRange];
             }
@@ -197,14 +197,14 @@
                 [nodeAttributedString addAttribute:NSBackgroundColorAttributeName value:backgroundColor range:nodeAttributedStringRange];
             }
         }
-        
-        // Paragraph Tag
+
+            // Paragraph Tag
         else if (strncmp("p", (const char *)xmlNode->name, strlen((const char *)xmlNode->name)) == 0) {
             NSMutableParagraphStyle *paragraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
-            
+
             if ([attributeDictionary objectForKey:@"align"]) {
                 NSString *alignString = [[attributeDictionary objectForKey:@"align"] lowercaseString];
-                
+
                 if ([alignString isEqualToString:@"left"]) {
                     paragraphStyle.alignment = NSTextAlignmentLeft;
                 }
@@ -220,7 +220,7 @@
             }
             if ([attributeDictionary objectForKey:@"linebreakmode"]) {
                 NSString *lineBreakModeString = [[attributeDictionary objectForKey:@"linebreakmode"] lowercaseString];
-                
+
                 if ([lineBreakModeString isEqualToString:@"wordwrapping"]) {
                     paragraphStyle.lineBreakMode = NSLineBreakByWordWrapping;
                 }
@@ -240,7 +240,7 @@
                     paragraphStyle.lineBreakMode = NSLineBreakByTruncatingMiddle;
                 }
             }
-            
+
             if ([attributeDictionary objectForKey:@"firstlineheadindent"]) {
                 paragraphStyle.firstLineHeadIndent = [[attributeDictionary objectForKey:@"firstlineheadindent"] doubleValue];
             }
@@ -271,13 +271,13 @@
             if ([attributeDictionary objectForKey:@"tailindent"]) {
                 paragraphStyle.tailIndent = [[attributeDictionary objectForKey:@"tailindent"] doubleValue];
             }
-            
+
             [nodeAttributedString addAttribute:NSParagraphStyleAttributeName value:paragraphStyle range:nodeAttributedStringRange];
         }
-        
-        // Links
+
+            // Links
         else if (strncmp("a href", (const char *)xmlNode->name, strlen((const char *)xmlNode->name)) == 0) {
-            
+
             xmlChar *value = xmlNodeListGetString(xmlNode->doc, xmlNode->xmlChildrenNode, 1);
             if (value)
             {
@@ -287,7 +287,7 @@
             }
         }
     }
-    
+
     return nodeAttributedString;
 }
 
@@ -303,7 +303,7 @@
 {
     if (hexString == nil)
         return nil;
-    
+
     hexString = [hexString stringByReplacingOccurrencesOfString:@"#" withString:@""];
     char *p;
     NSUInteger hexValue = strtoul([hexString cStringUsingEncoding:NSUTF8StringEncoding], &p, 16);
