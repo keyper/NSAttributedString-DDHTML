@@ -1,5 +1,5 @@
 Pod::Spec.new do |s|
-  s.name         = "NSAttributedString-DDHTML"
+  s.name         = "NSAttributedString-DDHTML@keyper"
   s.version      = "0.0.1"
   s.summary      = "Simplifies working with NSAttributedString by allowing you to use HTML to describe formatting behaviors."
   s.description  = <<-DESC
@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
                    * Finally, don't worry about the indent, CocoaPods strips it!
                    DESC
 
-  s.homepage     = "https://github.com/dbowen/NSAttributedString-DDHTML"
+  s.homepage     = "https://github.com/keyper/NSAttributedString-DDHTML"
 
   s.license      = { :type => 'BSD', :text => <<-LICENSE
   Created by Derek Bowen
@@ -42,7 +42,7 @@ Pod::Spec.new do |s|
 
   s.author       = 'Derek Bowen'
   s.platform     = :ios, '4.3'
-  s.source       = { :git => "https://github.com/dbowen/NSAttributedString-DDHTML.git", :commit => "03c0ec124e424aeb37fbf05a31048f51c7d65b22" }
+  s.source       = { :git => "https://github.com/keyper/NSAttributedString-DDHTML.git" }
   s.source_files  = 'NSAttributedString+DDHTML'
   s.library   = 'xml2'
   s.requires_arc = true
